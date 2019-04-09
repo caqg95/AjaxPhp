@@ -1,4 +1,5 @@
 $(document).ready(function() {
+  let edit=false;
   fetchTasks();
   $("#task-result").hide();
   $("#search").keyup(function() {
@@ -31,9 +32,11 @@ $(document).ready(function() {
   $("#task-form").submit(function(e) {
     const posData = {
       title: $("#name").val(),
-      description: $("#description").val()
+      description: $("#description").val(),
+      Id: $("#taskId").val()
     };
-    $.post("task-add.php", posData, function(response) {
+    let url= edit===false ? 'task-add.php' : 'task-edit.php';
+    $.post(url, posData, function(response) {
       $("#task-form").trigger("reset");
       alert(response);
       fetchTasks();
@@ -51,7 +54,9 @@ $(document).ready(function() {
           template += `
                         <tr>
                             <td>${task.Id}</td>
-                            <td><a href="#" class="task-item" taskId="${task.Id}">${task.title}</a></td>
+                            <td><a href="#" class="task-item" taskId="${
+                              task.Id
+                            }">${task.title}</a></td>
                             <td>${task.description}</td>
                             <td>
                                 <button class="task-delete btn btn-danger" taskId="${
@@ -69,12 +74,20 @@ $(document).ready(function() {
     if (confirm("Are you sure you want to delete it?")) {
       let element = $(this)[0];
       let Id = $(element).attr("taskId");
-      $.post('task-delete.php', { Id }, function(response) {
+      $.post("task-delete.php", { Id }, function(response) {
         fetchTasks();
       });
     }
   });
   $(document).on("click", ".task-item", function() {
-
+    let element = $(this)[0];
+    let Id = $(element).attr("taskId");
+    $.post("task-single.php", { Id }, function(response) {
+      const task=JSON.parse(response);
+      $('#name').val(task[0].title);
+      $('#description').val(task[0].description);
+      $('#taskId').val(Id);
+      edit=true;
+    });
   });
 });
